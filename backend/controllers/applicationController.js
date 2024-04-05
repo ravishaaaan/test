@@ -36,8 +36,8 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
   const { name, email, coverLetter, phone, address, jobId } = req.body;
   const applicantID = {
     user: req.user._id,
-    role: "Job Seeker",
-  };
+    role: "Job Seeker", 
+  };  //
   if (!jobId) {
     return next(new ErrorHandler("Job not found!", 404));
   }
