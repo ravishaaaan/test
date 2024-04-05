@@ -2,7 +2,14 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import ErrorHandler from "../middlewares/error.js";
 import { Application } from "../models/applicationSchema.js";
 import { Job } from "../models/jobSchema.js";
-import cloudinary from "cloudinary";
+// import cloudinary from "cloudinary";
+import {v2 as cloudinary} from 'cloudinary';
+          
+cloudinary.config({ 
+  cloud_name: 'dmlw1umyl', 
+  api_key: '731262481795942', 
+  api_secret: 'yO-yP2qXNbREhARJXzGnKu7jxq8' 
+});
 
 export const postApplication = catchAsyncErrors(async (req, res, next) => {
   const { role } = req.user;
@@ -14,7 +21,7 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return next(new ErrorHandler("Resume File Required!", 400));
   }
-
+  
   const { resume } = req.files;
   const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
   if (!allowedFormats.includes(resume.mimetype)) {
@@ -22,9 +29,32 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
       new ErrorHandler("Invalid file type. Please upload a PNG file.", 400)
     );
   }
-  const cloudinaryResponse = await cloudinary.uploader.upload(
-    resume.tempFilePath
-  );
+  /////
+  // console.log("check0");
+  //let cloudinaryResponse;
+  // let pid;
+  
+    const cloudinaryResponse = await cloudinary.uploader.upload(resume.tempFilePath, { public_id: "malsheeee" });
+  
+    if (!cloudinaryResponse || cloudinaryResponse.error) {
+      console.error(
+        "Cloudinary Error:",
+        cloudinaryResponse.error || "Unknown Cloudinary error"
+      );
+      return next(new ErrorHandler("Failed to upload Resume to Cloudinary", 500));
+    }
+  
+    // Log public ID and secure URL to console
+    // console.log("Public ID:", cloudinaryResponse.public_id);
+    // console.log("Secure URL:", cloudinaryResponse.secure_url);
+  
+
+
+  /////
+  // const cloudinaryResponse = await cloudinary.uploader.upload(
+  //   resume.tempFilePath
+  // );
+  
 
   if (!cloudinaryResponse || cloudinaryResponse.error) {
     console.error(
@@ -37,7 +67,7 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
   const applicantID = {
     user: req.user._id,
     role: "Job Seeker", 
-  };  //
+  };  
   if (!jobId) {
     return next(new ErrorHandler("Job not found!", 404));
   }
@@ -62,6 +92,9 @@ export const postApplication = catchAsyncErrors(async (req, res, next) => {
   ) {
     return next(new ErrorHandler("Please fill all fields.", 400));
   }
+  // console.log("id" +cloudinaryResponse.public_id );
+  // console.log("id" +cloudinaryResponse.secure_url );
+
   const application = await Application.create({
     name,
     email,
